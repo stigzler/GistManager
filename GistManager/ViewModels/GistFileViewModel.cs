@@ -62,6 +62,7 @@ namespace GistManager.ViewModels
             set
             {
                 var originalFileName = fileName;
+                OldFilename = fileName;
                 SetProperty(ref fileName, value);
                 // Below removed as don't want autosave on filename change
                 return;
@@ -71,6 +72,8 @@ namespace GistManager.ViewModels
                 }
             }
         }
+
+        public string OldFilename { get; set; } = null;
 
         private string content;
         public string Content
@@ -89,7 +92,7 @@ namespace GistManager.ViewModels
             get => isSelected;
             set => SetProperty(ref isSelected, value);
         }
-        public string Url { get; }
+        public string Url { get; set; }
 
         private bool isEnabled = true;
         public bool IsEnabled
@@ -114,7 +117,7 @@ namespace GistManager.ViewModels
             {
                 var data = Url.Split('/');
                 return data[data.Length - 1];
-            }
+            }  
         }
 
         #region commands
@@ -147,9 +150,6 @@ namespace GistManager.ViewModels
 
         internal async virtual Task UpdateGistAsync()
         {
-           // await GistClientService.
-
-
             await UpdateGistCommand.ExecuteAsync(this.fileName);
         }
         private async Task RenameGistFileAsync(string newName) => await GistClientService.RenameGistFileAsync(ParentGist.Gist.Id, GistFile.Name, newName, Content, ParentGist.Description);
@@ -161,7 +161,7 @@ namespace GistManager.ViewModels
 
         private async Task DeleteGistFileUpdateUiAsync()
         {
-
+            if (ParentGist.Files.Count == 1) return;
             await GistClientService.DeleteGistFileAsync(ParentGist.Gist.Id, FileName);
             ParentGist.Files.Remove(this);
         }

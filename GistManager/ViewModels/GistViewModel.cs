@@ -86,7 +86,8 @@ namespace GistManager.ViewModels
 
 
         private async Task DeleteGistFileAsync()
-        {         
+        {
+            if (Files.Count == 1) return;
             await GistClientService.DeleteGistAsync(Gist.Id);
             mainViewModel.Gists.Remove(this);
         }
@@ -105,11 +106,16 @@ namespace GistManager.ViewModels
 
             var result = await GistClientService.CreateGistFileAsync(Gist.Id, finalFilename, fileContent);
 
+            mainViewModel.Gists.Count();
+
+            // below seems good
             GistFile gistFile = result.Files[finalFilename];
 
             GistFileModel gfm = new GistFileModel(gistFile);
 
             GistFileViewModel newGistFileViewModel = new GistFileViewModel(gfm, this, GistClientService, asyncOperationStatusManager, errorHandler);
+
+            newGistFileViewModel.Url = result.Files.Last().Value.RawUrl;
 
             Files.Add(newGistFileViewModel);
         }

@@ -1,9 +1,14 @@
-﻿using GistManager.ViewModels;
+﻿using GistManager.GistService;
+using GistManager.ViewModels;
+using Octokit;
+using Octokit.Internal;
 using Syncfusion.Windows.Edit;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Windows.Input;
@@ -167,12 +172,15 @@ namespace GistManager.Utils
         /// <returns></returns>
         internal async Task<bool> UpdateGistOnRepositoryAsync(GistFileViewModel gistFileViewModel = null)
         {
-            // if 
+           
             if (gistFileViewModel == null) gistFileViewModel = this.gistFileVM;
             if (gistFileViewModel == null) return false;
 
             // return save button border to normal (aesthetics) 
             SetSaveButtonOutline(false);
+
+            // tmep store 'old' filename
+            string oldFilename = gistFileViewModel.OldFilename;
 
             // update GistFileViewModel for edge cases where changes not caught by UI changes
             UpdateGistViewModel();
@@ -181,7 +189,28 @@ namespace GistManager.Utils
             mainWindowControl.SaveButton.IsEnabled = false;
 
             // do repo update
-            await gistFileViewModel.UpdateGistAsync();
+            Gist returnedGist = await mainWindowControl.ViewModel.gistClientService.RenameGistFileAsync(gistFileViewModel.ParentGist.Gist.Id,
+                oldFilename, gistFileViewModel.FileName, gistFileViewModel.Content, gistFileViewModel.ParentGist.Description);
+
+
+            // do UI Element Updates
+            // first, displayed filenames and updaqte the raw URL
+            GistViewModel uiGistParent = mainWindowControl.ViewModel.Gists.Where(g => g.Gist.Id == gistFileViewModel.ParentGist.Gist.Id).First();
+
+            //GistFileViewModel viewModelGistFile = uiGistParent.Files.Where(gf => gf.FileName == gistFileViewModel.FileName).FirstOrDefault();
+            //viewModelGistFile.FileName = gistFileViewModel.FileName;
+            //viewModelGistFile.Url = UrlFromGistFileVM(returnedGist, gistFileViewModel.FileName);
+
+            // Test: 1 - whether the new filename means is no longer at top of files list alphabetically (means Lead Gist becomes this GistFile)
+            // 2 - if above not true - tests if this gist is the lead gist
+            // Result - if either met - do a full refresh as cannot figure how to update manually with this bonkers code. 
+            var dave = gistFileViewModel.ParentGist.Files.OrderBy(gf => gf.FileName);
+            if (gistFileViewModel.ParentGist.Name != dave.First().GistFile.Name ||
+                gistFileViewModel.GistFile.Name == gistFileViewModel.ParentGist.Name)
+            {
+                gistFileViewModel.ParentGist.Name = gistFileViewModel.FileName;
+                mainWindowControl.ViewModel.RefreshCommand.Execute(null);
+            }       
 
             // enable Save button
             mainWindowControl.SaveButton.IsEnabled = true;
@@ -206,7 +235,48 @@ namespace GistManager.Utils
             // update the Gist's viewmodel form the UIElements
             GistFileVM.ParentGist.Description = mainWindowControl.ParentGistDescriptionTB.Text;
             GistFileVM.Content = mainWindowControl.GistCodeEditor.Text;
+            GistFileVM.OldFilename = gistFileVM.FileName;
             GistFileVM.FileName = mainWindowControl.GistFilenameTB.Text;
+            
+            // URL
+            //string primaryGistID = GistFileVM.ParentGist.Gist.Id;
+            //string primaryGistLastestVersion = GistFileVM.ParentGist.History[0].Version;
+
+            //Uri uri = new Uri(GistFileVM.Url);
+
+            //string[] urlSegments = uri.Segments;
+
+            //StringBuilder urlSb = new StringBuilder();
+            //urlSb.Append(uri.Scheme + "://");
+            //urlSb.Append(uri.Host + "/");
+            //urlSb.Append(urlSegments[1]); // username
+            //urlSb.Append(primaryGistID + "/"); // primary Gist Id
+            //urlSb.Append("raw/"); // convention
+            //urlSb.Append(primaryGistLastestVersion + "/"); // latest primary gist version
+            //urlSb.Append(Uri.EscapeUriString(GistFileVM.FileName)).Replace("%20","%2520");
+
+            //GistFileVM.Url = urlSb.ToString();
+        }
+
+        private string UrlFromGistFileVM(Gist gist, string filename)
+        {
+            string primaryGistID = gist.Id;
+            string primaryGistLastestVersion = gist.History[0].Version;
+
+            Uri uri = new Uri(gist.HtmlUrl);
+
+            string[] urlSegments = uri.Segments;
+
+            StringBuilder urlSb = new StringBuilder();
+            urlSb.Append(uri.Scheme + "://");
+            urlSb.Append("gist.githubusercontent.com/");
+            urlSb.Append(urlSegments[1]); // username
+            urlSb.Append(primaryGistID + "/"); // primary Gist Id
+            urlSb.Append("raw/"); // convention
+            urlSb.Append(primaryGistLastestVersion + "/"); // latest primary gist version
+            urlSb.Append(Uri.EscapeUriString(filename).Replace("%20","%2520"));
+
+            return urlSb.ToString();
         }
 
         internal void CheckUiWithGistVmForChanges()

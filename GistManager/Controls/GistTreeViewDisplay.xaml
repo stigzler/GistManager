@@ -61,7 +61,6 @@
                      Color="{DynamicResource {x:Static SystemColors.HighlightTextColorKey}}"/>
                 <HierarchicalDataTemplate  ItemsSource="{Binding Files}" DataType="{x:Type viewmodels:GistViewModel}">
                     <StackPanel Orientation="Horizontal" >
-
                         <imaging:CrispImage Width="16" Height="16" Moniker="{x:Static catalog:KnownMonikers.Item}" />
                         <TextBlock Text="{Binding Name}" Margin="4,0,0,0" Loaded="TextBlock_Loaded"  />
                     </StackPanel>
@@ -119,7 +118,7 @@
                                     </MenuItem.Icon>
                                 </MenuItem>
 
-                                <MenuItem Header="Checkout version" ItemsSource="{Binding History}">
+                                <!--<MenuItem Header="Checkout version" ItemsSource="{Binding History}">
                                     <MenuItem.ItemTemplate>
                                         <DataTemplate>
                                             <RadioButton IsChecked="{Binding IsCheckedOut, Mode=TwoWay}">
@@ -133,7 +132,9 @@
                                     <MenuItem.Icon>
                                         <imaging:CrispImage Width="16" Height="16" Moniker="{x:Static catalog:KnownMonikers.CheckOutItem}" />
                                     </MenuItem.Icon>
-                                </MenuItem>
+                                </MenuItem>-->
+
+
                             </ContextMenu>
                         </Setter.Value>
                     </Setter>
@@ -165,7 +166,7 @@
                                     </MenuItem.Icon>
                                 </MenuItem>
 
-                                <MenuItem Header="Checkout version" ItemsSource="{Binding History}">
+                                <!--<MenuItem Header="Checkout version" ItemsSource="{Binding History}">
                                     <MenuItem.ItemTemplate>
                                         <DataTemplate>
                                             <RadioButton IsChecked="{Binding IsCheckedOut, Mode=TwoWay}">
@@ -178,7 +179,7 @@
                                     <MenuItem.Icon>
                                         <imaging:CrispImage Width="16" Height="16" Moniker="{x:Static catalog:KnownMonikers.CheckOutForEdit}" />
                                     </MenuItem.Icon>
-                                </MenuItem>
+                                </MenuItem>-->
 
                             </ContextMenu>
                         </Setter.Value>

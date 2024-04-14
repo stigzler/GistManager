@@ -25,15 +25,13 @@ namespace GistManager.GistService.Model
         public bool IsPublic => gist.Public;
         public string Description => gist.Description;
         public string Name => GetGistName();
-        private string GetGistName()
+        internal string GetGistName()
         {
             if (gist.Files.Count == 0)
                 return $"gist:{Guid.NewGuid().ToString("N").ToLower()}";
             return gist.Files.FirstOrDefault().Value.Filename;
         }
-
- 
-
+        
         public string Url => gist.HtmlUrl;
 
         private readonly SortedList<string, GistFileModel> files;

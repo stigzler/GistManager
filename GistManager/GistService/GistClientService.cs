@@ -77,6 +77,12 @@ namespace GistManager.GistService
             return response;
         }
 
+        //public async Task<Gist> UpdateGist()
+        //{
+        //    GistFileUpdate gistFileUpdate = new GistFileUpdate() 
+        //    var update = new GistUpdate() { }
+        //}
+
         public async Task DeleteGistFileAsync(string gistId, string fileName)
         {
             var update = new GistUpdate();

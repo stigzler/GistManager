@@ -78,6 +78,8 @@ namespace GistManager.ViewModels
 
         private async Task RefreshAsync()
         {
+            Mouse.OverrideCursor = Cursors.Wait;
+
             var gists = await gistClientService.GetGistsAsync();
 
             Gists.RemoveRange(Gists.Where(g => g.GetType() == typeof(CreateGistViewModel)).ToList());
@@ -93,6 +95,9 @@ namespace GistManager.ViewModels
             {
                 HandleExistingGist(existingGist, gists.Single(g => g.Id == existingGist.Gist.Id));
             }
+
+            Mouse.OverrideCursor = null;
+
         }
 
         private async Task LogoutAsync()
