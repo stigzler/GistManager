@@ -195,7 +195,8 @@ namespace GistManager
 
         private async void SaveButton_ClickAsync(object sender, RoutedEventArgs e)
         {
-            var response = await CodeEditorManager.UpdateGistOnRepositoryAsync();
+            bool refreshRequired = await CodeEditorManager.UpdateGistOnRepositoryAsync();
+            if (refreshRequired) ViewModel.RefreshCommand.Execute(null);
         }
 
         private void GistTreeScroller_SizeChanged(object sender, SizeChangedEventArgs e)

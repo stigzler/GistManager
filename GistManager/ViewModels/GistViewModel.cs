@@ -87,7 +87,7 @@ namespace GistManager.ViewModels
 
         private async Task DeleteGistFileAsync()
         {
-            if (Files.Count == 1) return;
+            //if (Files.Count == 1) return;
             await GistClientService.DeleteGistAsync(Gist.Id);
             mainViewModel.Gists.Remove(this);
         }

@@ -19,6 +19,7 @@
                  mc:Ignorable="d"
                  Name="GistManager" AllowDrop="True">
 
+    
 
     <UserControl.Resources>
         <converters:CommandFailedConverter x:Key="commandFailedConverter" />
@@ -28,7 +29,9 @@
         <converters:BoolToVisibilityConverter x:Key="boolToVisibilityConverter" />
         <converters:InverseBoolToVisibilityConverter x:Key="inverseBoolToVisibilityConverter" />
         <converters:EmptyStringToVisibilityConverter x:Key="emptyStringToVisibilityConverter" />
+        
         <styleSelectors:TreeViewItemStyleSelector x:Key="treeViewItemStyleSelector" />
+        
         <CollectionViewSource x:Key="publicGistsSource" 
                               Source="{Binding Gists}"                               
                               behaviors:CollectionViewSourceFilterBehavior.FilterCommand="{Binding PublicFilterCommand}"
@@ -432,7 +435,6 @@
                         
                         <controls:DropDownButton.Menu>
                             <ContextMenu>
-
                                 <MenuItem>
                                     <MenuItem.Icon>
                                         <imaging:CrispImage Width="16" Height="16" Moniker="{x:Static catalog:KnownMonikers.WebUserControl}" />

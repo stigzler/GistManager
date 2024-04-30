@@ -64,16 +64,22 @@ namespace GistManager.Utils
         internal async Task SaveAllAsync()
         {
             //TODO: Meed to reveiw this - buggy
-            foreach (GistViewModel gistVM in mainWindowControl.ViewModel.Gists)
+            bool refreshRequired = false;
+
+            foreach (GistViewModel gistVM in mainWindowControl.ViewModel.Gists.OrderByDescending(g => g.Name)) 
             {
-                foreach (GistFileViewModel gistFileVM in gistVM.Files)
+                foreach (GistFileViewModel gistFileVM in gistVM.Files.OrderByDescending(f => f.FileName))
                 {
                     if (gistFileVM.HasChanges)
                     {
-                        await UpdateGistOnRepositoryAsync(gistFileVM);
+                       bool refreshRequiredFromIteration = await UpdateGistOnRepositoryAsync(gistFileVM);
+                        if (refreshRequiredFromIteration) refreshRequired = true;
                     }
                 }
             }
+
+            if (refreshRequired) { mainWindowControl.ViewModel.RefreshCommand.Execute(null); }
+
         }
 
         private void SetSaveButtonOutline(bool visible)
@@ -92,6 +98,8 @@ namespace GistManager.Utils
             SetSaveButtonOutline(isChanged);
             gistFileVM.HasChanges = isChanged;
         }
+
+
         private void OnGistFileChanged()
         {
             Mouse.OverrideCursor = Cursors.Wait;
@@ -169,9 +177,10 @@ namespace GistManager.Utils
         /// <summary>
         /// Updates the Gist on the Gist Repository
         /// </summary>
-        /// <returns></returns>
+        /// <returns>Whether refresh required (hack)</returns>
         internal async Task<bool> UpdateGistOnRepositoryAsync(GistFileViewModel gistFileViewModel = null)
         {
+            bool refreshRequired = false;
            
             if (gistFileViewModel == null) gistFileViewModel = this.gistFileVM;
             if (gistFileViewModel == null) return false;
@@ -192,24 +201,20 @@ namespace GistManager.Utils
             Gist returnedGist = await mainWindowControl.ViewModel.gistClientService.RenameGistFileAsync(gistFileViewModel.ParentGist.Gist.Id,
                 oldFilename, gistFileViewModel.FileName, gistFileViewModel.Content, gistFileViewModel.ParentGist.Description);
 
-
             // do UI Element Updates
             // first, displayed filenames and updaqte the raw URL
             GistViewModel uiGistParent = mainWindowControl.ViewModel.Gists.Where(g => g.Gist.Id == gistFileViewModel.ParentGist.Gist.Id).First();
 
-            //GistFileViewModel viewModelGistFile = uiGistParent.Files.Where(gf => gf.FileName == gistFileViewModel.FileName).FirstOrDefault();
-            //viewModelGistFile.FileName = gistFileViewModel.FileName;
-            //viewModelGistFile.Url = UrlFromGistFileVM(returnedGist, gistFileViewModel.FileName);
-
             // Test: 1 - whether the new filename means is no longer at top of files list alphabetically (means Lead Gist becomes this GistFile)
-            // 2 - if above not true - tests if this gist is the lead gist
+            // 2 - if above not true - tests if this gist is the lead gist itself presently
             // Result - if either met - do a full refresh as cannot figure how to update manually with this bonkers code. 
             var dave = gistFileViewModel.ParentGist.Files.OrderBy(gf => gf.FileName);
             if (gistFileViewModel.ParentGist.Name != dave.First().GistFile.Name ||
                 gistFileViewModel.GistFile.Name == gistFileViewModel.ParentGist.Name)
             {
                 gistFileViewModel.ParentGist.Name = gistFileViewModel.FileName;
-                mainWindowControl.ViewModel.RefreshCommand.Execute(null);
+                //mainWindowControl.ViewModel.RefreshCommand.Execute(null);
+                refreshRequired = true;
             }       
 
             // enable Save button
@@ -220,7 +225,7 @@ namespace GistManager.Utils
 
             mainWindowControl.GistCodeEditor.SaveFile(gistTempFile);
 
-            return true;
+            return refreshRequired;
         }
 
         private void CheckForChangesBeforeGistFileVMChange()
